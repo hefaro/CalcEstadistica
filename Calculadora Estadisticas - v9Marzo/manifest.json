@@ -1,0 +1,16 @@
+{
+  "name": "Estadística - Narciso Cabal",
+  "short_name": "EstadisticaNCS",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#1a237e",
+"icons": [
+  {
+    "src": "icono_Calculadora.jpg",
+    "sizes": "512x512",
+    "type": "image/jpg",
+    "purpose": "any maskable"
+  }
+]
+}

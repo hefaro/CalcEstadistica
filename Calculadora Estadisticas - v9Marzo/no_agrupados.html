@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadística NCS - Análisis No Agrupados</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root { --primary: #1a237e; --accent: #ffd600; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { text-align: center; color: var(--primary); border-bottom: 3px solid var(--accent); margin-bottom: 20px; }
+        
+        .student-info { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .student-info input { flex: 1; padding: 12px; border: 2px solid #cfd8dc; border-radius: 8px; min-width: 200px; font-size: 16px; }
+
+        textarea { width: 100%; height: 85px; border: 2px solid #cfd8dc; border-radius: 10px; padding: 10px; font-size: 16px; box-sizing: border-box; }
+        
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 15px 0; justify-content: center; }
+        button { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; min-width: 120px; transition: 0.2s; font-size: 14px; }
+        button:active { transform: scale(0.95); }
+        
+        .btn-main { background: var(--primary); color: white; }
+        .btn-sec { background: #455a64; color: white; }
+        .btn-pdf { background: #e65100; color: white; display: none; }
+        .btn-clear { background: #d32f2f; color: white; }
+        
+        /* Zona Amarilla */
+        .analysis-box { background: #fff9c4; border: 2px solid #fbc02d; padding: 18px; margin-top: 15px; border-radius: 10px; display: none; color: #5d4037; line-height: 1.6; }
+        
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 10px; margin-top: 20px; display: none; }
+        .card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 10px; text-align: center; border-top: 4px solid var(--primary); }
+        .val { font-size: 1.2em; font-weight: bold; color: var(--primary); }
+        
+        .table-container { margin-top: 20px; overflow-x: auto; display: none; }
+        table { width: 100%; border-collapse: collapse; background: white; font-size: 0.9em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: var(--primary); color: white; }
+
+        .personal-area { margin-top: 20px; display: none; }
+        .personal-area label { font-weight: bold; color: var(--primary); display: block; margin-bottom: 5px; }
+
+        .chart-container { position: relative; height: 350px; width: 100%; margin-top: 25px; background: white; border: 1px solid #eee; }
+        .sorted-box { background: #e8f5e9; padding: 10px; border-radius: 8px; border: 1px solid #2e7d32; margin-top: 10px; font-size: 0.9em; display: none; overflow-x: auto; white-space: nowrap; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <img src="narciso.png" alt="Logo NCS" style="max-width: 85px; margin-bottom: 10px;">
+        <h1>I.E. Narciso Cabal Salcedo</h1>
+        <p>Laboratorio: Análisis de Datos No Agrupados</p>
+    </div>
+
+    <div class="student-info">
+        <input type="text" id="nomEst" placeholder="Nombre del Estudiante">
+        <input type="text" id="grpEst" placeholder="Grupo (ej: 8-3)">
+    </div>
+
+    <textarea id="inputDatos" placeholder="Ingresa datos separados por comas o usa Azar..."></textarea>
+    
+    <div class="controls">
+        <button class="btn-main" onclick="procesar()">📊 Analizar</button>
+        <button class="btn-sec" onclick="generarAleatorios(30)">🎲 Azar</button>
+        <button class="btn-pdf" id="btnPDF" onclick="exportarPDF()">📄 Exportar PDF</button>
+        <button class="btn-clear" onclick="limpiarTodo()">Sweep 🧹</button>
+    </div>
+
+    <div id="panelOrdenado" class="sorted-box"></div>
+
+    <div class="results-grid" id="resultados">
+        <div class="card"><span>Media \(\bar{x}\)</span><div class="val" id="resMedia"></div></div>
+        <div class="card"><span>Desv. \(S\)</span><div class="val" id="resDesv"></div></div>
+        <div class="card"><span>Rango</span><div class="val" id="resRango"></div></div>
+        <div class="card"><span>Mediana</span><div class="val" id="resQ2"></div></div>
+    </div>
+
+    <div id="panelAnalisis" class="analysis-box">
+        <h3 style="margin:0 0 10px 0;">🔍 Razonamiento Estadístico:</h3>
+        <p id="txtAnalisis"></p>
+    </div>
+
+    <div class="table-container" id="panelTabla">
+        <table id="tablaFrec">
+            <thead>
+                <tr>
+                    <th>Dato (\(x_i\))</th>
+                    <th>Frec. Abs (\(f_i\))</th>
+                    <th>Frec. Acum (\(F_i\))</th>
+                    <th>Frec. Rel (\(h_i\))</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="personal-area" id="zonaEscritura">
+        <label>Análisis e Interpretación del Estudiante:</label>
+        <textarea id="analisisAlumno" placeholder="Describe lo que observas en el gráfico y la dispersión de los datos..."></textarea>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="miGrafico"></canvas>
+    </div>
+</div>
+
+<script>
+let miChart = null;
+
+function generarAleatorios(n) {
+    let d = Array.from({length: n}, () => Math.floor(Math.random() * 50) + 10);
+    document.getElementById('inputDatos').value = d.join(", ");
+    procesar();
+}
+
+function limpiarTodo() { location.reload(); }
+
+function procesar() {
+    const input = document.getElementById('inputDatos').value;
+    let datos = input.split(/[\s,;]+/).map(Number).filter(n => !isNaN(n));
+    if (datos.length < 4) return alert("Héctor, ingresa al menos 4 datos.");
+
+    datos.sort((a, b) => a - b);
+    const n = datos.length;
+    const media = datos.reduce((a, b) => a + b, 0) / n;
+    const varianza = datos.reduce((acc, x) => acc + Math.pow(x - media, 2), 0) / (n - 1);
+    const desv = Math.sqrt(varianza);
+
+    const frec = {};
+    datos.forEach(x => frec[x] = (frec[x] || 0) + 1);
+    const labels = Object.keys(frec).sort((a, b) => Number(a) - Number(b));
+    
+    const tbody = document.querySelector("#tablaFrec tbody");
+    tbody.innerHTML = "";
+    let acum = 0;
+    labels.forEach(v => {
+        acum += frec[v];
+        tbody.innerHTML += `<tr><td>${v}</td><td>${frec[v]}</td><td>${acum}</td><td>${(frec[v]/n).toFixed(3)}</td></tr>`;
+    });
+
+    const maxF = Math.max(...Object.values(frec));
+    const moda = Number(Object.keys(frec).find(k => frec[k] === maxF));
+
+    document.getElementById('resMedia').innerText = media.toFixed(2);
+    document.getElementById('resDesv').innerText = desv.toFixed(2);
+    document.getElementById('resRango').innerText = datos[n-1] - datos[0];
+    document.getElementById('resQ2').innerText = (n % 2 === 0 ? (datos[n/2-1]+datos[n/2])/2 : datos[Math.floor(n/2)]).toFixed(2);
+    
+    document.getElementById('panelOrdenado').innerText = "Datos Ordenados: " + datos.join(" | ");
+    document.getElementById('panelOrdenado').style.display = "block";
+    document.getElementById('resultados').style.display = "grid";
+    document.getElementById('panelTabla').style.display = "block";
+    document.getElementById('zonaEscritura').style.display = "block";
+    document.getElementById('btnPDF').style.display = "block";
+    document.getElementById('panelAnalisis').style.display = "block";
+
+    document.getElementById('txtAnalisis').innerHTML = `• <b>Dispersión:</b> La desviación estándar es de ${desv.toFixed(2)}.<br>• <b>Centro:</b> El valor promedio es ${media.toFixed(2)} y el dato más frecuente es ${moda}.`;
+
+    renderGrafico(labels, frec, media, moda);
+    if (window.MathJax) MathJax.typeset();
+}
+
+function renderGrafico(labels, frecMap, media, moda) {
+    const ctx = document.getElementById('miGrafico').getContext('2d');
+    if (miChart) miChart.destroy();
+    
+    const numLabels = labels.map(Number);
+    const getPos = (val) => {
+        let idx = numLabels.indexOf(val);
+        if (idx !== -1) return idx;
+        for(let i=0; i<numLabels.length-1; i++) {
+            if(val > numLabels[i] && val < numLabels[i+1]) return i + (val-numLabels[i])/(numLabels[i+1]-numLabels[i]);
+        }
+        return val < numLabels[0] ? 0 : numLabels.length-1;
+    };
+
+    miChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{ label: 'Frecuencia', data: labels.map(l => frecMap[l]), backgroundColor: 'rgba(26, 35, 126, 0.8)' }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false, // CLAVE PARA MÓVIL
+            devicePixelRatio: 2,
+            plugins: {
+                annotation: {
+                    annotations: {
+                        lineM: { type: 'line', xMin: getPos(media), xMax: getPos(media), borderColor: 'red', borderWidth: 3, label: {display:true, content:'Media'} },
+                        lineMo: { type: 'line', xMin: getPos(moda), xMax: getPos(moda), borderColor: 'green', borderWidth: 2, borderDash:[5,5], label: {display:true, content:'Moda'} }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function exportarPDF() {
+    const btn = document.getElementById('btnPDF');
+    btn.innerText = "⏳ Generando...";
+    btn.disabled = true;
+
+    setTimeout(() => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const nombre = document.getElementById('nomEst').value || "Estudiante";
+        const grupo = document.getElementById('grpEst').value || "S/G";
+        const analisis = document.getElementById('analisisAlumno').value;
+
+        doc.setFontSize(18); doc.setTextColor(26, 35, 126);
+        doc.text("I.E. Narciso Cabal Salcedo", 105, 20, {align:"center"});
+        doc.setFontSize(10); doc.setTextColor(100);
+        doc.text(`Laboratorio Estadística (No Agrupados) | Estudiante: ${nombre} | Grupo: ${grupo}`, 105, 28, {align:"center"});
+
+        // Imagen del gráfico
+        const canvas = document.getElementById('miGrafico');
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        
+        doc.setFontSize(12); doc.setTextColor(0);
+        doc.text("Representación Gráfica:", 20, 45);
+        doc.addImage(imgData, 'PNG', 15, 50, 180, 85);
+
+        // Bloque de texto
+        doc.text("Análisis e Interpretación:", 20, 150);
+        doc.setFontSize(10);
+        const lineas = doc.splitTextToSize(analisis, 170);
+        doc.text(lineas, 20, 157);
+
+        // Tabla en página 2
+        doc.addPage();
+        doc.setFontSize(14); doc.text("Anexo: Tabla de Frecuencias Completa", 20, 20);
+        doc.autoTable({ html: '#tablaFrec', startY: 25, headStyles: {fillColor: [26, 35, 126]} });
+
+        doc.save(`Lab_NoAgrupados_${nombre.replace(/ /g,"_")}.pdf`);
+        
+        btn.innerText = "📄 Exportar PDF";
+        btn.disabled = false;
+    }, 850);
+}
+</script>
+</body>
+</html>
