@@ -1,16 +1,23 @@
 {
-  "name": "Estadística - Narciso Cabal",
-  "short_name": "EstadisticaNCS",
-  "start_url": "index.html",
+  "name": "Calculadora Estadística",
+  "short_name": "CalcEstadistica",
+  "description": "Calculadora estadística para 8vo y 9no grado",
+  "start_url": "/CalcEstadistica/",
+  "scope": "/CalcEstadistica/",
   "display": "standalone",
-  "background_color": "#f4f7f6",
-  "theme_color": "#1a237e",
-"icons": [
-  {
-    "src": "icono_Calculadora.jpg",
-    "sizes": "512x512",
-    "type": "image/jpg",
-    "purpose": "any maskable"
-  }
-]
+  "background_color": "#ffffff",
+  "theme_color": "#2196f3",
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
