@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plataforma Estadística NCS</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Paleta de colores institucional y moderna */
+        :root {
+            --primary: #1a237e; /* Azul oscuro institucional */
+            --accent: #ffd600;  /* Amarillo/Dorado institucional */
+            --bg: #f4f7f6;      /* Fondo gris muy claro */
+            --text: #333;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Configuración global para adaptabilidad total */
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* Centrado vertical en la pantalla */
+        }
+
+        /* Contenedor principal con diseño móvil-primero */
+        .splash-container {
+            width: 100%;
+            max-width: 500px; /* Limita el ancho en pantallas grandes */
+            padding: 30px 20px;
+            text-align: center;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            margin: 20px;
+        }
+
+        /* Estilos para el Logo Institucional */
+        .logo-ie {
+            max-width: 150px; /* Tamaño controlado del logo */
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        /* Títulos centrados e institucionales */
+        h1 {
+            color: var(--primary);
+            font-size: 1.8em;
+            margin: 0 0 5px 0;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .welcome-msg {
+            font-size: 0.9em;
+            color: #777;
+            margin-bottom: 35px;
+            line-height: 1.4;
+        }
+
+        /* Contenedor de botones con diseño de menú */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Una columna por defecto (móvil) */
+            gap: 15px;
+        }
+
+        /* Estilos táctiles para las tarjetas/botones de menú */
+        .menu-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            display: flex;
+            align-items: center;
+            text-align: left;
+            position: relative;
+            -webkit-tap-highlight-color: transparent; /* Quita el flash de selección en móvil */
+        }
+
+        /* Efecto al pasar el mouse (para PC) y al tocar (para móvil) */
+        .menu-card:hover, .menu-card:active {
+            border-color: var(--accent);
+            background-color: #fbfdff;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(26, 35, 126, 0.1);
+        }
+
+        /* Contenedor de iconos dentro de la tarjeta */
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.4em;
+            color: white;
+        }
+
+        /* Colores específicos para cada sección */
+        .blue-icon { background: var(--primary); }
+        .sky-icon { background: #0288d1; }
+        .grey-icon { background: #455a64; }
+
+        /* Textos dentro de la tarjeta */
+        .card-text {
+            flex: 1;
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 1.05em;
+            color: var(--primary);
+            margin-bottom: 2px;
+        }
+
+        .card-desc {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        /* Flecha indicadora opcional al final */
+        .fa-chevron-right {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="splash-container">
+    <img src="narciso.png" alt="Logo I.E. Narciso Cabal Salcedo" class="logo-ie">
+    
+    <h1>Plataforma Estadística NCS</h1>
+    <p class="subtitle">Laboratorio de Matemáticas</p>
+    <p class="welcome-msg">Bienvenido, Prof. Héctor Fabio Rojas.<br>Selecciona un módulo para comenzar.</p>
+
+    <div class="menu-grid">
+        
+        <div class="menu-card" onclick="location.href='no_agrupados.html'">
+            <div class="icon-box blue-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="card-text">
+                <div class="card-title">Datos No Agrupados</div>
+                <div class="card-desc">Análisis básico y tabla de frecuencias.</div>
+            </div>
+            <i class="fas fa-chevron-right"></i>
+        </div>
+
+        <div class="menu-card" onclick="location.href='agrupados.html'">
+            <div class="icon-box sky-icon">
+                <i class="fas fa-chart-area"></i>
+            </div>
+            <div class="card-text">
+                <div class="card-title">Datos Agrupados</div>
+                <div class="card-desc">Intervalos, Sturges e Histogramas.</div>
+            </div>
+            <i class="fas fa-chevron-right"></i>
+        </div>
+
+        <div class="menu-card" onclick="location.href='gestion_datos.html'">
+            <div class="icon-box grey-icon">
+                <i class="fas fa-file-csv"></i>
+            </div>
+            <div class="card-text">
+                <div class="card-title">Gestionar Archivos CSV</div>
+                <div class="card-desc">Carga y guarda tus bases de datos.</div>
+            </div>
+            <i class="fas fa-chevron-right"></i>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

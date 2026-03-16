@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadística NCS - Datos Agrupados</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root { --primary: #1a237e; --accent: #ffd600; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 15px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { text-align: center; color: var(--primary); border-bottom: 3px solid var(--accent); margin-bottom: 20px; }
+        
+        .student-info { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .student-info input { flex: 1; padding: 10px; border: 2px solid #cfd8dc; border-radius: 8px; min-width: 200px; font-size: 16px; }
+
+        textarea { width: 100%; height: 80px; border: 2px solid #cfd8dc; border-radius: 10px; padding: 10px; font-size: 16px; box-sizing: border-box; }
+        
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 15px 0; justify-content: center; }
+        button { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; min-width: 120px; transition: 0.2s; font-size: 14px; }
+        button:active { transform: scale(0.95); }
+        
+        .btn-main { background: var(--primary); color: white; }
+        .btn-sec { background: #455a64; color: white; }
+        .btn-pdf { background: #e65100; color: white; display: none; }
+        .btn-clear { background: #d32f2f; color: white; }
+        
+        .analysis-box { background: #fff9c4; border: 2px solid #fbc02d; padding: 18px; margin-top: 15px; border-radius: 10px; display: none; color: #5d4037; }
+        
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 20px; display: none; }
+        .card { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 10px; text-align: center; border-top: 4px solid var(--primary); }
+        .val { font-size: 1.1em; font-weight: bold; color: var(--primary); }
+        
+        .table-container { margin-top: 20px; overflow-x: auto; display: none; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: var(--primary); color: white; }
+
+        .personal-area { margin-top: 20px; display: none; }
+        .personal-area label { font-weight: bold; color: var(--primary); display: block; margin-bottom: 5px; }
+
+        .chart-container { position: relative; height: 350px; width: 100%; margin-top: 25px; background: white; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <img src="narciso.png" alt="Logo" style="max-width: 80px; margin-bottom: 10px;">
+        <h1>I.E. Narciso Cabal Salcedo</h1>
+        <p>Laboratorio: Datos Agrupados (Sturges)</p>
+    </div>
+
+    <div class="student-info">
+        <input type="text" id="nomEst" placeholder="Nombre del Estudiante">
+        <input type="text" id="grpEst" placeholder="Grupo (ej: 9-3)">
+    </div>
+
+    <textarea id="inputDatos" placeholder="Ingresa los datos separados por comas..."></textarea>
+    
+    <div class="controls">
+        <button class="btn-main" onclick="procesarAgrupados()">📊 Analizar</button>
+        <button class="btn-sec" onclick="generarAleatorios(60)">🎲 Azar</button>
+        <button class="btn-pdf" id="btnPDF" onclick="exportarPDFAgrupados()">📄 Exportar PDF</button>
+        <button class="btn-clear" onclick="limpiar()">🧹 Limpiar</button>
+    </div>
+
+    <div class="results-grid" id="resultados">
+        <div class="card"><span>Muestra (\(n\))</span><div class="val" id="resN"></div></div>
+        <div class="card"><span>Rango (\(R\))</span><div class="val" id="resR"></div></div>
+        <div class="card"><span>Intervalos (\(K\))</span><div class="val" id="resK"></div></div>
+        <div class="card"><span>Amplitud (\(A\))</span><div class="val" id="resA"></div></div>
+    </div>
+
+    <div id="panelAnalisis" class="analysis-box">
+        <h3 style="margin:0 0 10px 0;">🔍 Guía de Interpretación:</h3>
+        <p id="txtAnalisis"></p>
+    </div>
+
+    <div class="table-container" id="panelTabla">
+        <table id="tablaAgrupados">
+            <thead>
+                <tr>
+                    <th>Clase</th>
+                    <th>Intervalo</th>
+                    <th>Marca (\(x_i\))</th>
+                    <th>Freq (\(f_i\))</th>
+                    <th>Freq Acum (\(F_i\))</th>
+                    <th>%</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="personal-area" id="zonaEscritura">
+        <label>Análisis e Interpretación Personal:</label>
+        <textarea id="analisisAlumno" placeholder="Basado en el histograma, describe el comportamiento de los datos..."></textarea>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="miHistograma"></canvas>
+    </div>
+</div>
+
+<script>
+let miChart = null;
+window.graficoImg = null;
+
+function generarAleatorios(n) {
+    let d = Array.from({length: n}, () => Math.floor(Math.random() * 80) + 10);
+    document.getElementById('inputDatos').value = d.join(", ");
+    procesarAgrupados();
+}
+
+function limpiar() { location.reload(); }
+
+function procesarAgrupados() {
+    const input = document.getElementById('inputDatos').value;
+    let datos = input.split(/[\s,;]+/).map(Number).filter(n => !isNaN(n));
+    if (datos.length < 5) return alert("Héctor, ingresa más datos para agrupar.");
+
+    datos.sort((a, b) => a - b);
+    const n = datos.length;
+    const min = datos[0];
+    const max = datos[n-1];
+    const rango = max - min;
+    
+    const k = Math.ceil(1 + 3.322 * Math.log10(n));
+    const amplitud = Math.ceil(rango / k);
+
+    let intervalos = [];
+    let inicio = min;
+    for (let i = 0; i < k; i++) {
+        let fin = inicio + amplitud;
+        let count = (i === k - 1) 
+            ? datos.filter(d => d >= inicio && d <= max).length 
+            : datos.filter(d => d >= inicio && d < fin).length;
+        
+        intervalos.push({ inf: inicio, sup: fin, f: count, marca: (inicio + fin) / 2 });
+        inicio = fin;
+    }
+
+    const tbody = document.querySelector("#tablaAgrupados tbody");
+    tbody.innerHTML = "";
+    let fAcum = 0;
+    intervalos.forEach((inter, idx) => {
+        fAcum += inter.f;
+        tbody.innerHTML += `<tr><td>${idx+1}</td><td>[${inter.inf} - ${inter.sup})</td><td>${inter.marca.toFixed(1)}</td><td>${inter.f}</td><td>${fAcum}</td><td>${((inter.f/n)*100).toFixed(1)}%</td></tr>`;
+    });
+
+    document.getElementById('resN').innerText = n;
+    document.getElementById('resR').innerText = rango;
+    document.getElementById('resK').innerText = k;
+    document.getElementById('resA').innerText = amplitud;
+    document.getElementById('resultados').style.display = "grid";
+    document.getElementById('panelTabla').style.display = "block";
+    document.getElementById('zonaEscritura').style.display = "block";
+    document.getElementById('btnPDF').style.display = "block";
+    document.getElementById('panelAnalisis').style.display = "block";
+    document.getElementById('txtAnalisis').innerHTML = `Se han organizado los datos en <b>${k}</b> intervalos con un ancho de <b>${amplitud}</b> cada uno.`;
+
+    renderHistograma(intervalos);
+    if (window.MathJax) MathJax.typeset();
+}
+
+function renderHistograma(intervalos) {
+    const ctx = document.getElementById('miHistograma').getContext('2d');
+    if (miChart) miChart.destroy();
+    
+    miChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: intervalos.map(i => `[${i.inf}-${i.sup})`),
+            datasets: [{
+                label: 'Frecuencia',
+                data: intervalos.map(i => i.f),
+                backgroundColor: 'rgba(26, 35, 126, 0.8)',
+                barPercentage: 1,
+                categoryPercentage: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false, // CLAVE PARA MÓVIL: Sin animación para captura inmediata
+            devicePixelRatio: 2 // Mejora resolución en móvil
+        }
+    });
+}
+
+function exportarPDFAgrupados() {
+    const btn = document.getElementById('btnPDF');
+    btn.innerText = "⏳ Procesando...";
+    btn.disabled = true;
+
+    // Retraso de seguridad para que el navegador móvil termine de dibujar
+    setTimeout(() => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const nombre = document.getElementById('nomEst').value || "Estudiante";
+        const grupo = document.getElementById('grpEst').value || "S/G";
+        const analisis = document.getElementById('analisisAlumno').value;
+
+        // Cabecera
+        doc.setFontSize(18); doc.setTextColor(26, 35, 126);
+        doc.text("I.E. Narciso Cabal Salcedo", 105, 20, {align:"center"});
+        doc.setFontSize(10); doc.setTextColor(100);
+        doc.text(`Informe de Datos Agrupados | Alumno: ${nombre} | Grupo: ${grupo}`, 105, 28, {align:"center"});
+
+        // Captura del Histograma
+        const canvas = document.getElementById('miHistograma');
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        
+        doc.setFontSize(12); doc.setTextColor(0);
+        doc.text("1. Distribución de Frecuencias (Histograma):", 20, 45);
+        doc.addImage(imgData, 'PNG', 15, 50, 180, 80);
+
+        // Análisis
+        doc.text("2. Interpretación del Estudiante:", 20, 145);
+        doc.setFontSize(10);
+        const splitText = doc.splitTextToSize(analisis, 170);
+        doc.text(splitText, 20, 152);
+
+        // Tabla en página 2
+        doc.addPage();
+        doc.setFontSize(14); doc.text("Anexo Técnico: Tabla de Frecuencias", 20, 20);
+        doc.autoTable({ html: '#tablaAgrupados', startY: 25, headStyles: {fillColor: [26, 35, 126]} });
+
+        doc.save(`Informe_Agrupados_${nombre.replace(/ /g,"_")}.pdf`);
+        
+        btn.innerText = "📄 Exportar PDF";
+        btn.disabled = false;
+    }, 800);
+}
+</script>
+</body>
+</html>
